@@ -30,24 +30,23 @@ api/
 │   ├── main.py              # FastAPIアプリケーションのエントリーポイント
 │   ├── config.py            # 設定値の管理
 │   │
-│   ├── core/                # コア機能の実装
-│   │   ├── security.py      # 認証・認可関連
-│   │   └── exceptions.py    # カスタム例外クラス
+│   ├── routers/             # APIエンドポイントの実装
+│   │   ├── form.py         # フォーム関連のエンドポイント
+│   │   └── schedule.py     # スケジュール関連のエンドポイント
 │   │
-│   ├── models/              # データモデルの定義
-│   │   └── schemas.py       # Pydanticモデル
+│   ├── schemas/             # リクエスト/レスポンスのスキーマ定義
+│   │   ├── __init__.py     # スキーマのエクスポート
+│   │   ├── form.py         # フォーム関連のスキーマ
+│   │   └── schedule.py     # スケジュール関連のスキーマ
 │   │
-│   ├── services/            # ビジネスロジックの実装
-│   │   ├── calendar.py      # カレンダー関連の処理
-│   │   ├── email.py         # メール送信関連の処理
-│   │   └── cosmos.py        # データベース関連の処理
+│   ├── internal/           # 内部モジュール
+│   │   ├── cosmos.py      # Cosmos DB関連の処理
+│   │   └── graph_api.py   # Graph API関連の処理
 │   │
-│   └── api/                 # APIエンドポイントの実装
-│       └── endpoints/       # 各エンドポイントの実装
-│           ├── form.py      # フォーム関連のエンドポイント
-│           └── schedule.py  # スケジュール関連のエンドポイント
+│   └── utils/             # ユーティリティ関数
+│       └── time_utils.py  # 時間関連のユーティリティ
 │
-└── tests/                   # テストコード
+└── tests/                 # テストコード
 ```
 
 ## セットアップ
@@ -120,11 +119,17 @@ func azure functionapp publish <function-app-name>
 
 ```json
 {
-    "users": ["user1@example.com", "user2@example.com"],
-    "candidates": ["2024-03-20 10:00", "2024-03-20 11:00"],
+    "start_date": "2025-01-10",
+    "end_date": "2025-01-15",
     "start_time": "09:00",
     "end_time": "18:00",
-    "duration_minutes": 60
+    "selected_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "duration_minutes": 60,
+    "users": [
+        {"email": "interviewer1@example.com"},
+        {"email": "interviewer2@example.com"}
+    ],
+    "time_zone": "Tokyo Standard Time"
 }
 ```
 
@@ -136,6 +141,42 @@ Query Parameters:
 - token: フォームデータのトークン
 ```
 
+### スケジュール関連
+
+#### POST /api/get_availability
+空き時間の取得
+
+```json
+{
+    "start_date": "2025-01-10",
+    "end_date": "2025-01-15",
+    "start_time": "09:00",
+    "end_time": "18:00",
+    "selected_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "duration_minutes": 60,
+    "users": [
+        {"email": "interviewer1@example.com"},
+        {"email": "interviewer2@example.com"}
+    ],
+    "time_zone": "Tokyo Standard Time"
+}
+```
+
+#### POST /api/appointment
+面接予定の作成
+
+```json
+{
+    "candidate": "2025-01-10T10:00:00,2025-01-10T11:00:00",
+    "users": ["interviewer1@example.com", "interviewer2@example.com"],
+    "lastname": "山田",
+    "firstname": "太郎",
+    "company": "株式会社サンプル",
+    "email": "candidate@example.com",
+    "token": "sample-token-123"
+}
+```
+
 #### GET /api/reschedule
 予定の再調整
 
@@ -145,50 +186,14 @@ Query Parameters:
 - confirm: 確認フラグ（boolean）
 ```
 
-### スケジュール関連
-
-#### POST /api/get_availability
-空き時間の取得
-
-```json
-{
-    "start_date": "2024-03-20",
-    "end_date": "2024-03-25",
-    "start_time": "09:00",
-    "end_time": "18:00",
-    "selected_days": ["Monday", "Tuesday", "Wednesday"],
-    "duration_minutes": 60,
-    "users": [
-        {"email": "user1@example.com"},
-        {"email": "user2@example.com"}
-    ]
-}
-```
-
-#### POST /api/appointment
-面接予定の作成
-
-```json
-{
-    "candidate": "2024-03-20 10:00, 2024-03-20 11:00",
-    "users": ["user1@example.com", "user2@example.com"],
-    "lastname": "山田",
-    "firstname": "太郎",
-    "company": "株式会社テスト",
-    "email": "candidate@example.com",
-    "token": "form-token"
-}
-```
-
 ## エラーハンドリング
 
 APIは以下のカスタム例外を使用してエラーを処理します：
 
-- `TokenNotFoundError`: トークンが見つからない場合
-- `AuthenticationError`: 認証に失敗した場合
-- `DatabaseError`: データベース操作に失敗した場合
-- `CalendarError`: カレンダー操作に失敗した場合
-- `EmailError`: メール送信に失敗した場合
+- `ScheduleManagementError`: スケジュール管理システムの基本例外クラス
+- `ValidationError`: バリデーションエラー
+- `DatabaseError`: データベース関連のエラー
+- `APIError`: API関連のエラー
 
 ## テスト
 
