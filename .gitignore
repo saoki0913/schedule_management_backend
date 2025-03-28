@@ -1,0 +1,6 @@
+.local.settings.json
+.venv
+.vscode
+.pytest_cache
+.python_packages
+.funcignore
