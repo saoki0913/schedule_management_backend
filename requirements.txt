@@ -12,3 +12,6 @@ python-multipart
 pydantic
 msal
 python-dateutil
+pytest==7.4.3
+pytest-cov==4.1.0
+httpx==0.25.1
