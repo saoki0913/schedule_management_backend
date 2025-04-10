@@ -11,7 +11,7 @@ router = APIRouter(tags=["forms"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/storeFormData", response_model=dict)
+@router.post("/store_form_data", response_model=dict)
 def store_form_data(payload: FormData = Body(...)):
     """
     クライアントから送信されたフォームデータを Cosmos DB に保存し、一意のトークン（id）を返すエンドポイント
@@ -25,7 +25,7 @@ def store_form_data(payload: FormData = Body(...)):
         raise HTTPException(status_code=500, detail="Failed to store form data")
 
 
-@router.get("/retrieveFormData", response_model=FormData)
+@router.get("/retrieve_form_data", response_model=FormData)
 def retrieve_form_data(token: str = Query(..., description="保存済みフォームデータのトークン")):
     """
     指定されたトークンから Cosmos DB に保存されたフォームデータ（JSON）を復元して返すエンドポイント。

@@ -9,7 +9,7 @@ class User(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "email": "user@example.com"
+                "email": "crawler01@intelligentforce.co.jp"
             }
         }
 
@@ -35,11 +35,11 @@ class ScheduleRequest(BaseModel):
                 "end_date": "2025-01-15",
                 "start_time": "09:00",
                 "end_time": "18:00",
-                "selected_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "selected_days": ["月", "火", "水", "木", "金"],
                 "duration_minutes": 60,
                 "users": [
-                    {"email": "interviewer1@example.com"},
-                    {"email": "interviewer2@example.com"}
+                    {"email": "crawler01@intelligentforce.co.jp"},
+                    {"email": "y.ohama@intelligentforce.co.jp"}
                 ],
                 "time_zone": "Tokyo Standard Time"
             }
@@ -67,11 +67,11 @@ class FormData(BaseModel):
                 "end_date": "2025-01-15",
                 "start_time": "09:00",
                 "end_time": "18:00",
-                "selected_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "selected_days": ["月", "火", "水", "木", "金"],
                 "duration_minutes": 60,
                 "users": [
-                    {"email": "interviewer1@example.com"},
-                    {"email": "interviewer2@example.com"}
+                    {"email": "crawler01@intelligentforce.co.jp"},
+                    {"email": "y.ohama@intelligentforce.co.jp"}
                 ],
                 "time_zone": "Tokyo Standard Time",
                 "isConfirmed": False,

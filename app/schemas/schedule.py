@@ -19,11 +19,11 @@ class AppointmentRequest(BaseModel):
         json_schema_extra = {
             "example": {
                 "candidate": "2025-01-10T10:00:00,2025-01-10T11:00:00",
-                "users": ["interviewer1@example.com", "interviewer2@example.com"],
-                "lastname": "山田",
-                "firstname": "太郎",
+                "users": ["crawler01@intelligentforce.co.jp", "crawler02@intelligentforce.co.jp"],
+                "lastname": "青木",
+                "firstname": "駿介",
                 "company": "株式会社サンプル",
-                "email": "candidate@example.com",
+                "email": "shunsuke.aoki0913@gmail.com",
                 "token": "sample-token-123"
             }
         }
@@ -40,9 +40,9 @@ class AppointmentResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "message": "予定を登録しました。確認メールは別途送信されます。",
-                "subjects": ["面接: 山田 太郎 (株式会社サンプル)"],
+                "subjects": ["面接: 青木 駿介 (株式会社サンプル)"],
                 "meeting_urls": ["https://teams.microsoft.com/l/meetup-join/..."],
-                "users": ["interviewer1@example.com", "interviewer2@example.com"]
+                "users": ["crawler01@intelligentforce.co.jp", "crawler02@intelligentforce.co.jp"]
             }
         }
 
