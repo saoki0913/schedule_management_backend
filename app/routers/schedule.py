@@ -5,10 +5,11 @@ import urllib.parse
 import requests
 
 from app.config import FRONT_URL, BACKEND_URL
+from app.dependencies import container
 from app.dependencies import get_access_token
 from app.internal.cosmos import get_form_data, update_form_with_events, finalize_form
 from app.internal.graph_api import get_schedules, parse_availability, create_event_payload, register_event_with_retry
-from app.internal.mail import send_confirmation_emails
+from app.internal.mail import send_confirmation_emails, send_no_available_schedule_emails
 from app.utils.time_utils import time_string_to_float, slot_to_time, find_common_availability
 from app.utils.formatters import parse_candidate
 from app.schemas import (
@@ -27,17 +28,23 @@ def get_availability(schedule_req: ScheduleRequest):
     """
     指定されたユーザリストと日付・時間帯における空き時間候補を返す
     """
-    schedule_info = get_schedules(schedule_req)
-    start_hour = time_string_to_float(schedule_req.start_time)
-    end_hour = time_string_to_float(schedule_req.end_time)
-    free_slots_list = parse_availability(
-        schedule_info, 
-        start_hour,
-        end_hour
-    )
-    common_slots = find_common_availability(free_slots_list, schedule_req.duration_minutes)
-    common_times = slot_to_time(schedule_req.start_date, common_slots)
-    return AvailabilityResponse(common_availability=common_times)
+    try:
+        schedule_info = get_schedules(schedule_req)
+        start_hour = time_string_to_float(schedule_req.start_time)
+        end_hour = time_string_to_float(schedule_req.end_time)
+        free_slots_list = parse_availability(
+            schedule_info, 
+            start_hour,
+            end_hour
+        )
+        common_slots = find_common_availability(free_slots_list, schedule_req.duration_minutes)
+        common_times = slot_to_time(schedule_req.start_date, common_slots)
+        return AvailabilityResponse(
+            common_availability=common_times
+        )
+    except Exception as e:
+        logger.error(f"候補日の取得に失敗しました: {e}")
+        raise HTTPException(status_code=500, detail="候補日の取得に失敗しました")
 
 
 @router.post("/appointment", response_model=AppointmentResponse)
@@ -51,8 +58,16 @@ def create_appointment(
     candidate が有効な場合は "開始日時, 終了日時" の形式で渡されるものとする。
     """
     try:
-        # candidate が "none" または None の場合は、予定登録せずその旨返す
+        # candidate が None または "none" の場合は、予定登録せずその旨返す
         if appointment_req.candidate is None or appointment_req.candidate.lower() == "none":
+            # 担当者にメールを送信
+            access_token = get_access_token()
+            background_tasks.add_task(
+                send_no_available_schedule_emails,
+                access_token,
+                appointment_req
+            )
+
             return AppointmentResponse(
                 message="候補として '可能な日程がない' が選択されました。予定は登録されません。",
                 subjects=[],
@@ -64,7 +79,7 @@ def create_appointment(
         start_str, end_str, selected_candidate = parse_candidate(appointment_req.candidate)
 
         # Outlook に登録するイベント情報の構築
-        event = create_event_payload(appointment_req.model_dump(), start_str, end_str)
+        event = create_event_payload(appointment_req, start_str, end_str)
 
         # アクセストークン取得
         access_token = get_access_token()
@@ -94,20 +109,19 @@ def create_appointment(
 
         # 作成された各イベントから件名とオンライン会議のURLを抽出
         subjects = [evt.get("subject") for evt in created_events]
-        meeting_url = [evt.get("onlineMeeting", {}).get("joinUrl") for evt in created_events]
+        meeting_urls = [evt.get("onlineMeeting", {}).get("joinUrl") for evt in created_events]
 
         # 非重要な処理は非同期で行う
         background_tasks.add_task(
             send_confirmation_emails, 
             access_token, 
-            appointment_req.model_dump(), 
-            meeting_url
+            appointment_req, 
+            meeting_urls
         )
-        
         return AppointmentResponse(
             message="予定を登録しました。確認メールは別途送信されます。",
             subjects=subjects,
-            meeting_urls=meeting_url,
+            meeting_urls=meeting_urls,
             users=appointment_req.users
         )
     except Exception as e:
@@ -215,9 +229,6 @@ def reschedule(
     # フォームを再利用可能にするため、isConfirmed を False に戻し、event_ids を削除する
     form["isConfirmed"] = False
     form.pop("event_ids", None)
-    # Cosmos DBのコンテナを直接使用
-    from app.dependencies import container
-    from app.config import PARTITION_KEY
     container.replace_item(item=form["id"], body=form)
 
     # 処理完了後、再調整用のリンクをボタンにして表示する

@@ -103,3 +103,36 @@ def send_appointment_emails_client(access_token, appointment_request, meeting_ur
 
     # リスト内の各送信先へメールを送信
     send_email_graph(access_token, SYSTEM_SENDER_EMAIL, appointment_request.email, subject, body)
+
+
+def send_no_available_schedule_emails(access_token: str, appointment_request) -> None:
+    """
+    可能な日程がない場合のメールを担当者に送信する関数
+
+    Parameters:
+        access_token: Microsoft Graph APIのアクセストークン
+        appointment_request: 以下の属性を持つオブジェクト
+            - users: 送信先メールアドレスのリスト
+            - lastname: 姓
+            - firstname: 名
+            - company: 所属
+            - email: 申込者のメールアドレス
+    """
+    # 件名の作成
+    subject = f"【{appointment_request.company}/{appointment_request.lastname}{appointment_request.firstname}様】日程調整の回答"
+
+    # 本文の作成（HTMLフォーマット）
+    body = (
+        f"{appointment_request.lastname}様<br><br>"
+        "以下の候補者から日程調整の回答がありましたが、提示された日程では面接の調整ができませんでした。<br><br>"
+        f"・氏名<br>{appointment_request.lastname} {appointment_request.firstname}<br><br>"
+        f"・所属<br>{appointment_request.company}<br><br>"
+        f"・メールアドレス<br>{appointment_request.email}<br><br>"
+        "候補者からは「可能な日程がない」との回答がありました。<br>"
+        "別の日程を提示するか、直接候補者と調整をお願いします。<br><br>"
+        "※このメールは自動送信されています。"
+    )
+
+    # リスト内の各送信先へメールを送信
+    for to_email in appointment_request.users:
+        send_email_graph(access_token, SYSTEM_SENDER_EMAIL, to_email, subject, body)

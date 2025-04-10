@@ -46,4 +46,12 @@ def mock_event_creation():
         "subject": "面接: 山田 太郎",
         "onlineMeeting": {"joinUrl": "https://teams.microsoft.com/l/meetup-join/..."}
     }
-    return mock_event 
+    return mock_event
+
+def mock_send_email():
+    """メール送信のモック"""
+    return None
+
+def mock_send_no_available_schedule_emails():
+    """可能な日程がない場合のメール送信のモック"""
+    return None 
