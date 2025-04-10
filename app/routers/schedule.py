@@ -10,7 +10,7 @@ from app.dependencies import get_access_token
 from app.internal.cosmos import get_form_data, update_form_with_events, finalize_form
 from app.internal.graph_api import get_schedules, parse_availability, create_event_payload, register_event_with_retry
 from app.internal.mail import send_confirmation_emails, send_no_available_schedule_emails
-from app.utils.time_utils import time_string_to_float, slot_to_time, find_common_availability
+from app.utils.time_utils import time_string_to_float, slot_to_time, find_common_availability, find_common_availability_participants
 from app.utils.formatters import parse_candidate
 from app.schemas import (
     ScheduleRequest,
@@ -37,8 +37,21 @@ def get_availability(schedule_req: ScheduleRequest):
             start_hour,
             end_hour
         )
-        common_slots = find_common_availability(free_slots_list, schedule_req.duration_minutes)
+        if len(schedule_req.users) == schedule_req.required_participants:
+            # required_participantsが全員の場合は、全員の空き時間を返す
+            common_slots = find_common_availability(free_slots_list, schedule_req.duration_minutes)
+        else:
+            # required_participantsに基づいて共通の空き時間を計算
+            common_slots = find_common_availability_participants(
+                free_slots_list, 
+                schedule_req.duration_minutes,
+                schedule_req.required_participants,
+                schedule_req.users
+            )
+        
+        # スロットを時間形式に変換
         common_times = slot_to_time(schedule_req.start_date, common_slots)
+            
         return AvailabilityResponse(
             common_availability=common_times
         )

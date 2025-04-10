@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import List
 
 def time_string_to_float(time_str: str) -> float:
     """
@@ -184,4 +185,107 @@ def find_common_availability(free_slots_list, duration_minutes):
     #-------------------------------------
     result = list(sorted(set(result), key=lambda x: float(x.split(" - ")[0])))
 
+    return result
+
+
+def find_common_availability_participants(free_slots_list, duration_minutes, required_participants):
+    """
+    指定された人数(required_participants)以上のユーザーが空いている時間帯の
+    共通スロットを探す関数。
+
+    Parameters:
+        free_slots_list (list): すべてのユーザーのスケジュール情報。
+            例: [
+                    [(9.0, 9.5), (11.0, 11.5), ...],  # ユーザー1の空き時間
+                    [(9.0, 9.5), (12.0, 12.5), ...],    # ユーザー2の空き時間
+                    ...
+                ]
+        duration_minutes (int): 必要な空き時間の長さ (分)。
+        required_participants (int): この時間帯に空いている必要があるユーザーの最低人数。
+
+    Returns:
+        list: 指定された人数以上が確保でき、かつ連続する空き時間のスロット(文字列)のリスト。
+              例: [ "9.0 - 10.0", "11.0 - 12.0", ... ]
+    """
+    #-------------------------------------
+    # 1. 必要な連続スロット数を算出 (30分単位)
+    #-------------------------------------
+    required_slots = duration_minutes // 30
+
+    #-------------------------------------
+    # 2. 各ユーザーの空きスロットをカウントする
+    #-------------------------------------
+    # ここでは、すべてのユーザーのスロットを結合して、
+    # そのスロットごとに何人のユーザーが空いているかを数える。
+    slot_counts = {}
+    for user_slots in free_slots_list:
+        for slot in user_slots:
+            # ここでは slot は (start, end) のタプルと仮定
+            slot_counts[slot] = slot_counts.get(slot, 0) + 1
+
+    #-------------------------------------
+    # 3. required_participants 以上のユーザーが利用可能なスロットを抽出
+    #-------------------------------------
+    available_slots = [slot for slot, count in slot_counts.items() if count >= required_participants]
+    if not available_slots:
+        return []
+
+    #-------------------------------------
+    # 4. 開始時刻でソート
+    #-------------------------------------
+    sorted_available_slots = sorted(available_slots, key=lambda slot: slot[0])
+
+    #-------------------------------------
+    # 5. 「隣接」関係 (連続しているか) でグラフを構築
+    #    隣り合うスロットについて、終わりの時間と次の開始時間が一致するか確認
+    #-------------------------------------
+    adjacency = {slot: [] for slot in sorted_available_slots}
+    for i in range(len(sorted_available_slots) - 1):
+        curr_slot = sorted_available_slots[i]
+        next_slot = sorted_available_slots[i + 1]
+        # 連続の条件: 現在のスロットの終了時刻と次のスロットの開始時刻が等しいか（浮動小数点誤差を考慮）
+        if abs(curr_slot[1] - next_slot[0]) < 1e-2:
+            adjacency[curr_slot].append(next_slot)
+        # 両方向を考慮する場合
+        if abs(next_slot[1] - curr_slot[0]) < 1e-2:
+            adjacency[next_slot].append(curr_slot)
+
+    #-------------------------------------
+    # 6. BFS を使って連続するスロットのかたまり（連続コンポーネント）を探索
+    #-------------------------------------
+    visited = set()
+    connected_components = []
+    for slot in sorted_available_slots:
+        if slot not in visited:
+            queue = [slot]
+            visited.add(slot)
+            component = []
+            while queue:
+                current = queue.pop(0)
+                component.append(current)
+                for neighbor in adjacency[current]:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append(neighbor)
+            # ソートしておく (開始時刻順)
+            component.sort(key=lambda x: x[0])
+            connected_components.append(component)
+
+    #-------------------------------------
+    # 7. 連続コンポーネント内から必要な連続スロット数を満たすものを抽出
+    #-------------------------------------
+    result = []
+    for component in connected_components:
+        # 例として component = [slotA, slotB, slotC, slotD]
+        # required_slots=2 なら、(slotA,slotB), (slotB,slotC), (slotC,slotD) が候補になる
+        if len(component) >= required_slots:
+            for i in range(len(component) - required_slots + 1):
+                start_time = component[i][0]
+                end_time = component[i + required_slots - 1][1]
+                result.append(f"{start_time} - {end_time}")
+
+    #-------------------------------------
+    # 8. 結果を開始時刻で再ソートおよび重複削除して返す
+    #-------------------------------------
+    result = list(sorted(set(result), key=lambda x: float(x.split(" - ")[0])))
     return result

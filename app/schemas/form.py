@@ -23,6 +23,7 @@ class ScheduleRequest(BaseModel):
     selected_days: List[str] = Field(..., description="選択された曜日のリスト")
     duration_minutes: int = Field(..., description="打合せ時間（分）")
     users: List[User] = Field(..., description="面接担当者のリスト")
+    required_participants: int = Field(..., description="共通する候補日を検索する人数")
     time_zone: str = Field(
         default="Tokyo Standard Time",
         description="タイムゾーン"
