@@ -40,18 +40,32 @@ def get_availability(schedule_req: ScheduleRequest):
         if len(schedule_req.users) == schedule_req.required_participants:
             # required_participantsが全員の場合は、全員の空き時間を返す
             common_slots = find_common_availability(free_slots_list, schedule_req.duration_minutes)
+            # スロットを時間形式に変換
+            datetime_tuples = slot_to_time(schedule_req.start_date, common_slots)
+            
+            # datetimeオブジェクトを文字列に変換
+            common_times = [
+                [dt1.strftime("%Y-%m-%dT%H:%M:%S"), dt2.strftime("%Y-%m-%dT%H:%M:%S")]
+                for dt1, dt2 in datetime_tuples
+            ]
         else:
             # required_participantsに基づいて共通の空き時間を計算
-            common_slots = find_common_availability_participants(
+            common_slots_users = find_common_availability_participants(
                 free_slots_list, 
                 schedule_req.duration_minutes,
                 schedule_req.required_participants,
                 schedule_req.users
             )
+            import ipdb; ipdb.set_trace()
+            # スロット（文字列）とその時間に空いているユーザ(list)を時間形式に変換
+            for common_slots in common_slots_users:
+                datetime_tuples.append(slot_to_time(schedule_req.start_date, common_slots))
+            # datetimeオブジェクトを文字列に変換
+            common_times = [
+                [dt1.strftime("%Y-%m-%dT%H:%M:%S"), dt2.strftime("%Y-%m-%dT%H:%M:%S")]
+                for dt1, dt2 in datetime_tuples
+            ]
         
-        # スロットを時間形式に変換
-        common_times = slot_to_time(schedule_req.start_date, common_slots)
-            
         return AvailabilityResponse(
             common_availability=common_times
         )

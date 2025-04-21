@@ -49,17 +49,17 @@ class AppointmentResponse(BaseModel):
 
 class AvailabilityResponse(BaseModel):
     """空き時間候補のレスポンスを表すスキーマ"""
-    common_availability: List[tuple] = Field(
+    common_availability: List[List[str]] = Field(
         ...,
-        description="共通の空き時間候補のリスト（(開始日時, 終了日時)のタプルのリスト）"
+        description="共通の空き時間候補のリスト（開始日時と終了日時のリストのリスト）"
     )
 
     class Config:
         json_schema_extra = {
             "example": {
                 "common_availability": [
-                    ("2025-01-10T10:00:00", "2025-01-10T11:00:00"),
-                    ("2025-01-10T14:00:00", "2025-01-10T15:00:00")
+                    ["2025-01-10T10:00:00", "2025-01-10T11:00:00"],
+                    ["2025-01-10T14:00:00", "2025-01-10T15:00:00"]
                 ]
             }
         } 

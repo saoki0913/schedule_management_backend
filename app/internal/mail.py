@@ -44,12 +44,12 @@ def send_appointment_emails(access_token, appointment_request, meeting_url):
 
     # 本文の作成
     body = (
-        "日程調整が完了しました。詳細は下記の通りです。\n\n"
-        f"・氏名\n{appointment_request.lastname} {appointment_request.firstname}\n"
-        f"・所属\n{appointment_request.company}\n"
-        f"・メールアドレス\n{appointment_request.email}\n"
-        f"・日程\n{format_candidate_date(appointment_request.candidate)}\n"
-        f"・会議URL\n{meeting_url}"
+        "日程調整が完了しました。詳細は下記の通りです。<br><br>"
+        f"・氏名<br>{appointment_request.lastname} {appointment_request.firstname}<br>"
+        f"・所属<br>{appointment_request.company}<br>"
+        f"・メールアドレス<br>{appointment_request.email}<br>"
+        f"・日程<br>{format_candidate_date(appointment_request.candidate)}<br>"
+        f"・会議URL<br><a href=\"{meeting_url}\">{meeting_url}</a><br><br>"
     )
 
     # リスト内の各送信先へメールを送信

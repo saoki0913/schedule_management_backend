@@ -48,11 +48,11 @@ container = database.create_container_if_not_exists(
 app = FastAPI()
 
 # ベースのURLを設定
-# backend_url = "http://localhost:7071"
-backend_url = "https://func-sche.azurewebsites.net"
+backend_url = "http://localhost:7071"
+# backend_url = "https://func-sche.azurewebsites.net"
 
-# front_url = "http://localhost:3000"
-front_url = "https://purple-water-0b7f3e600.6.azurestaticapps.net"
+front_url = "http://localhost:3000"
+# front_url = "https://purple-water-0b7f3e600.6.azurestaticapps.net"
 
 
 # リクエストボディのスキーマ定義
@@ -1012,4 +1012,3 @@ def format_candidate_date(candidate: str) -> str:
         return formatted_date
     except Exception as e:
         raise ValueError("候補情報の形式が不正です。'開始日時, 終了日時' の形式で入力してください。") from e
-

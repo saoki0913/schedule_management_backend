@@ -15,12 +15,12 @@ PARTITION_KEY = "FormData"
 
 # URL設定
 # ローカル開発用
-# BACKEND_URL = "http://localhost:7071"
-# FRONT_URL = "http://localhost:3000"
+BACKEND_URL = "http://localhost:7071"
+FRONT_URL = "http://localhost:3000"
 
 # 本番環境用
-BACKEND_URL = "https://func-schedule.azurewebsites.net"
-FRONT_URL = "https://blue-desert-046191c00.6.azurestaticapps.net"
+# BACKEND_URL = "https://func-schedule.azurewebsites.net"
+# FRONT_URL = "https://blue-desert-046191c00.6.azurestaticapps.net"
 
 # メール設定
 SYSTEM_SENDER_EMAIL = "crawler01@intelligentforce.co.jp"

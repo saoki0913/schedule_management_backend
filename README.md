@@ -53,7 +53,7 @@ api/
 
 ### 前提条件
 
-- Python 3.9以上
+- Python 3.10
 - Azure Functions Core Tools
 - Azure CLI（オプション：Azureリソースの管理用）
 
@@ -71,8 +71,7 @@ api/
         "TENANT_ID": "your-tenant-id",
         "CLIENT_ID": "your-client-id",
         "CLIENT_SECRET": "your-client-secret",
-        "BACKEND_URL": "http://localhost:7071",
-        "FRONT_URL": "http://localhost:3000"
+        "userId": "your-userid",
     }
 }
 ```
@@ -114,7 +113,7 @@ func azure functionapp publish <function-app-name>
 
 ### フォーム関連
 
-#### POST /api/storeFormData
+#### POST /api/store_form_data
 フォームデータを保存し、一意のトークンを返す
 
 ```json
@@ -123,8 +122,8 @@ func azure functionapp publish <function-app-name>
     "end_date": "2025-01-15",
     "start_time": "09:00",
     "end_time": "18:00",
-    "selected_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-    "duration_minutes": 60,
+    "selected_days": ["月", "火", "水", "木", "金"],
+    "duration_minutes": 30,
     "users": [
         {"email": "interviewer1@example.com"},
         {"email": "interviewer2@example.com"}
@@ -133,7 +132,7 @@ func azure functionapp publish <function-app-name>
 }
 ```
 
-#### GET /api/retrieveFormData
+#### GET /api/retrieve_form_data
 保存されたフォームデータを取得
 
 ```
@@ -204,37 +203,3 @@ pytest
 # カバレッジレポートの生成
 pytest --cov=app tests/
 ```
-
-## 開発ガイドライン
-
-1. **コードスタイル**
-   - PEP 8に準拠
-   - 型ヒントの使用
-   - ドキュメンテーション文字列の追加
-
-2. **コミットメッセージ**
-   - 変更内容を明確に説明
-   - 関連するIssue番号の参照
-   - 変更の種類（feat, fix, docs, style, refactor, test, chore）の明示
-
-3. **ブランチ戦略**
-   - main: 本番環境用
-   - develop: 開発用
-   - feature/*: 新機能開発用
-   - fix/*: バグ修正用
-
-## トラブルシューティング
-
-### よくある問題と解決方法
-
-1. **認証エラー**
-   - 環境変数が正しく設定されているか確認
-   - Azure ADの設定を確認
-
-2. **データベース接続エラー**
-   - Cosmos DBの接続文字列を確認
-   - ネットワーク設定を確認
-
-3. **カレンダー同期エラー**
-   - Graph APIの権限を確認
-   - アクセストークンの有効期限を確認
